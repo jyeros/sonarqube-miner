@@ -1,0 +1,37 @@
+GET https://sonarcloud.io/api/metrics/search?p=1&ps=100
+
+###
+
+GET https://sonarcloud.io/api/components/tree?component=apache_karaf
+
+###
+
+GET https://sonarcloud.io/api/components/show?component=apache_karaf
+
+###
+
+GET https://sonarcloud.io/api/sources/raw?key=apache_karaf:shell/console/src/main/java/org/apache/felix/gogo/commands/basic/AbstractCommand.java
+
+###
+
+GET https://sonarcloud.io/api/webservices/list
+
+###
+
+GET https://sonarcloud.io/api/project_branches/list?organization=apache&project=apache_karaf
+
+###
+
+GET https://sonarcloud.io/api/project_analyses/search?project=apache_karaf
+
+###
+
+GET https://sonarcloud.io/api/project_links/search?projectKey=apache_groovy
+
+###
+# Get github repository from sonarcloud project
+GET https://sonarcloud.io/api/navigation/component?component=apache_karaf&organization=apache
+
+###
+# Get projects without organization constraint
+GET https://sonarcloud.io/api/components/search_projects?filter=query = "apache_groovy"

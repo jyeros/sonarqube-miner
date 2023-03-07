@@ -6,6 +6,8 @@ from .route_config import RequestsConfig
 
 class Projects(SonarObject):
     def __init__(self, server, organization, output_path):
+        self._server = server
+        self._organization = organization
         SonarObject.__init__(
             self,
             endpoint = server + "api/components/search",
@@ -32,7 +34,46 @@ class Projects(SonarObject):
             df = pd.DataFrame(data=projects, columns=headers)
             df.to_csv(file_path, index=False, header=True, mode='w')
 
+    def _query_repo_server(self):
+        projects = [p for p in self._element_list]
+        new_projects = []
+        no_repo = []
+        repos = []
+        for project in projects:
+            r = self._route_config.call_api_route(session=self._SonarObject__session, endpoint=self._server + "api/navigation/component", params={
+                'component': project['key'],
+                'organization': project['organization']
+            })
+            body = r.json()
+            repoInfo = body.get('alm', None)
+            if repoInfo is not None:
+                project['repo'] = repoInfo['url']
+
+                r = self._route_config.call_api_route(session=self._SonarObject__session, endpoint=self._server + "api/project_branches/list", params={
+                    'project': project['key'],
+                    'organization': project['organization']
+                })
+                body = r.json()
+                branches = body.get('branches', [])
+                branches = [b for b in branches if b['isMain'] == True]
+                commit = branches[0].get('commit', {}).get('sha', None) if len(branches) > 0 else None
+                if commit is None:
+                    no_repo.append(project)
+                    continue
+
+                repos.append({'full_name': f"{project['organization']}/{project['key']}", 'url': f"{repoInfo['url']}", 'commit_hash': commit})
+
+                new_projects.append(project)
+
+            else:
+                no_repo.append(project)
+        self._element_list = new_projects
+        import json
+        with open(Path(self._output_path).joinpath("repos.json"), 'w') as f:
+            json.dump(repos, f)
+
     def process_elements(self):
         self._query_server(key = "components")
+        self._query_repo_server()
         self._write_csv()
         return self._element_list
