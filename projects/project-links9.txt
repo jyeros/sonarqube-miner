@@ -1,0 +1,17 @@
+https://sonarcloud.io/dashboard?id=apache_submarine_python_sdk
+https://sonarcloud.io/dashboard?id=apache_sling-maven-enforcer-rules
+https://sonarcloud.io/dashboard?id=apache_camel_quarkus
+https://sonarcloud.io/dashboard?id=apache_lucenenet
+https://sonarcloud.io/dashboard?id=apache_dubbo
+https://sonarcloud.io/dashboard?id=apache_dubbo-go-pixiu
+https://sonarcloud.io/dashboard?id=apache_dubbo-go
+https://sonarcloud.io/dashboard?id=apache_dubbo-js
+https://sonarcloud.io/dashboard?id=apache_dubbo-admin
+https://sonarcloud.io/dashboard?id=org.apache.jackrabbit:jackrabbit-oak
+https://sonarcloud.io/dashboard?id=db-jdo
+https://sonarcloud.io/dashboard?id=apache_calcite-avatica
+https://sonarcloud.io/dashboard?id=apache_calcite
+https://sonarcloud.io/dashboard?id=apache_struts
+https://sonarcloud.io/dashboard?id=apache_submarine
+https://sonarcloud.io/dashboard?id=apache_sling-org-apache-sling-commons-permissions
+https://sonarcloud.io/dashboard?id=apache_sling-org-apache-sling-commons-permissions-sling
