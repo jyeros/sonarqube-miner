@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+import requests
 
 from .sonar_object import SonarObject
 from .route_config import RequestsConfig
@@ -46,27 +47,31 @@ class Projects(SonarObject):
             })
             body = r.json()
             repoInfo = body.get('alm', None)
-            if repoInfo is not None:
+
+            r = self._route_config.call_api_route(session=self._SonarObject__session, endpoint=self._server + "api/project_branches/list", params={
+                'project': project['key'],
+                'organization': project['organization']
+            })
+            body = r.json()
+            branches = body.get('branches', [])
+            branches = [b for b in branches if b['isMain'] == True]
+            commit = branches[0].get('commit', {}).get('sha', None) if len(branches) > 0 else None
+
+            if repoInfo is not None and commit is not None:
                 project['repo'] = repoInfo['url']
 
-                r = self._route_config.call_api_route(session=self._SonarObject__session, endpoint=self._server + "api/project_branches/list", params={
-                    'project': project['key'],
-                    'organization': project['organization']
-                })
-                body = r.json()
-                branches = body.get('branches', [])
-                branches = [b for b in branches if b['isMain'] == True]
-                commit = branches[0].get('commit', {}).get('sha', None) if len(branches) > 0 else None
-                if commit is None:
-                    no_repo.append(project)
-                    continue
-
-                repos.append({'full_name': f"{project['organization']}/{project['key']}", 'url': f"{repoInfo['url']}", 'commit_hash': commit})
+                repos.append({'full_name': f"{project['organization']}/{project['key']}", 'url': repoInfo['url'], 'commit_hash': commit})
 
                 new_projects.append(project)
 
             else:
-                no_repo.append(project)
+                repo = f'https://github.com/{project["organization"]}/{project["key"]}'
+                if requests.get(f'{repo}/commit/{commit}').status_code == 200:
+                    project['repo'] = repo
+                    repos.append({'full_name': f"{project['organization']}/{project['key']}", 'url': repo, 'commit_hash': commit})
+                    new_projects.append(project)
+                else:
+                    no_repo.append(project)
         self._element_list = new_projects
         import json
         with open(Path(self._output_path).joinpath("repos.json"), 'w') as f:
