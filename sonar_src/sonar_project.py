@@ -76,6 +76,14 @@ class Projects(SonarObject):
         import json
         with open(Path(self._output_path).joinpath("repos.json"), 'w') as f:
             json.dump(repos, f)
+        file_number = 1
+        f = open(Path(self._output_path).joinpath(f"project_links{i}.txt"), 'w')
+        for i in range(len(new_projects)):
+            f.write(f"https://sonarcloud.io/dashboard?id={new_projects[i]['key']}")
+            if i % 40 == 0 and i != 0:
+                f.close()
+                file_number += 1
+                f = open(Path(self._output_path).joinpath(f"project_links{i}.txt"), 'w')
 
     def process_elements(self):
         self._query_server(key = "components")
