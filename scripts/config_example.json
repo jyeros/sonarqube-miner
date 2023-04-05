@@ -1,0 +1,4 @@
+{
+    "max_workers": 12,
+    "languages": ["py", "java", "c", "cpp", "kotlin", "go"]
+}
