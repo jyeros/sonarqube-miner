@@ -19,7 +19,7 @@ languages = config['languages']
 max_workers = config['max_workers']
 
 client = requests.Session()
-retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+retries = Retry(total=7, backoff_factor=2)
 client.mount('https://', HTTPAdapter(max_retries=retries))
 
 page_size = 500 # 500 is the max page size
@@ -28,6 +28,7 @@ base_url = 'https://sonarcloud.io'
 project_search_base_url = base_url + '/api/components/search_projects'
 repo_info_base_url = base_url + '/api/navigation/component'
 metrics_base_url = base_url + '/api/measures/component'
+issue_base_url = base_url + '/api/issues/search'
 branch_info_base_url = base_url + '/api/project_branches/list'
 
 data = {}
@@ -81,6 +82,26 @@ def __add_metrics(project, metrics=None):
         else:
             project['metrics'][metric['metric']] = metric['value']
 
+def __add_sonarqube_issue_info(project):
+    i = 1
+    more_elements = True
+    project['issues'] = []
+    while more_elements:
+        filters = {
+            'componentKeys': project['id'],
+            'organization': project['organization'],
+            'ps': page_size,
+            'p': i
+        }
+        body = client.get(f'{issue_base_url}?{urlencode(filters)}').json()
+        if body['total'] >= 10000:
+            raise Exception(f'Project {project["id"]} has more than 10000 issues. Handle this case.')
+        issues = body.get('issues', [])
+        project['issues'] += issues
+        if page_size * i > body['total']:
+            more_elements = False
+        i += 1
+
 def __get_repo_info(project, new_data, repos, writing_executor):
     print(f'Getting repo info for {project["organization"]}/{project["id"]}')
     filters = {
@@ -115,6 +136,7 @@ def __get_repo_info(project, new_data, repos, writing_executor):
             repo['commit_hash'] = commit
 
     __add_metrics(project)
+    __add_sonarqube_issue_info(project)
     writing_executor.submit(__add_repo_info, new_data, repos, project, repo)
 
 def get_repo_info(data):
