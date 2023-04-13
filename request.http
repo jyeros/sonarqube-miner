@@ -34,4 +34,7 @@ GET https://sonarcloud.io/api/navigation/component?component=apache_karaf&organi
 
 ###
 # Get projects without organization constraint
-GET https://sonarcloud.io/api/components/search_projects?filter=query = "apache_groovy"
+GET https://sonarcloud.io/api/components/search_projects?filter=query = "ai"
+
+###
+GET https://sonarcloud.io/api/measures/component?component=JanssenProject_jans-auth-server&metricKeys=ncloc%2Cncloc_language_distribution%2Cbugs%2Creliability_rating%2Cvulnerabilities%2Csecurity_rating%2Csecurity_hotspots%2Csecurity_review_rating%2Csecurity_hotspots_reviewed%2Ccode_smells%2Csqale_rating%2Ccoverage%2Cduplicated_lines_density&additionalFields=periods&organization=JanssenProject

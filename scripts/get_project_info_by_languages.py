@@ -27,6 +27,7 @@ max_elements = 10000
 base_url = 'https://sonarcloud.io'
 project_search_base_url = base_url + '/api/components/search_projects'
 repo_info_base_url = base_url + '/api/navigation/component'
+metrics_base_url = base_url + '/api/measures/component'
 branch_info_base_url = base_url + '/api/project_branches/list'
 
 data = {}
@@ -59,7 +60,29 @@ def __add_repo_info(new_data: list, repos: list, project, repo):
     if repo is not None:
         repos.append(repo)
 
+def __add_metrics(project, metrics=None):
+    if metrics is None:
+        metrics = ['ncloc', 'ncloc_language_distribution', 'bugs', 'reliability_rating', 'vulnerabilities', 'security_rating', 'security_hotspots', 'security_review_rating', 'security_hotspots_reviewed', 'code_smells', 'sqale_rating', 'coverage', 'duplicated_lines_density']
+    filters = {
+        'component': project['id'],
+        'organization': project['organization'],
+        'metricKeys': str.join(',', metrics)
+    }
+    body = client.get(f'{metrics_base_url}?{urlencode(filters)}').json()
+    metrics = body.get('component', {'measures': {}})['measures']
+
+    project['metrics'] = {}
+    for metric in metrics:
+        if metric['metric'] == 'ncloc_language_distribution':
+            project['metrics']['ncloc_by_language'] = {}
+            for lang in metric['value'].split(';'):
+                lang, count = lang.split('=')
+                project['metrics']['ncloc_by_language'][lang] = int(count)
+        else:
+            project['metrics'][metric['metric']] = metric['value']
+
 def __get_repo_info(project, new_data, repos, writing_executor):
+    print(f'Getting repo info for {project["organization"]}/{project["id"]}')
     filters = {
         'component': project['id'],
         'organization': project['organization']
@@ -79,6 +102,7 @@ def __get_repo_info(project, new_data, repos, writing_executor):
     repo = {'full_name': f"{project['organization']}/{project['id']}"}
     if repoInfo is not None and commit is not None:
         project['repo'] = repoInfo['url']
+        project['commit_hash'] = commit
 
         repo['url'] = repoInfo['url']
         repo['commit_hash'] = commit
@@ -86,8 +110,11 @@ def __get_repo_info(project, new_data, repos, writing_executor):
         url=f'https://github.com/{project["organization"]}/{project["id"]}'
         if client.get(f'{url}/commit/{commit}').status_code == 200:
             project['repo'] = url
+            project['commit_hash'] = commit
             repo['url'] = url
             repo['commit_hash'] = commit
+
+    __add_metrics(project)
     writing_executor.submit(__add_repo_info, new_data, repos, project, repo)
 
 def get_repo_info(data):
